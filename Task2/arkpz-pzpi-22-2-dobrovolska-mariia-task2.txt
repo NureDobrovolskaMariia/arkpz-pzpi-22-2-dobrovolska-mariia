@@ -1,0 +1,1971 @@
+Міністерство освіти і науки України
+
+
+
+Харківський національний університет радіоелектроніки
+
+Кафедра програмної інженерії
+
+
+
+
+Лабараторна робота №2
+
+з дисципліни “ Аналіз та рефакторінг коду”
+
+
+
+
+
+Виконала:                                                       Перевірив:
+Студентка ПЗПІ-22-2                                             ст. викладач кафедри ПІ           
+Добровольська М.А.                                              Сокорчук Ігор Петрович
+
+
+
+
+
+
+
+
+2024
+
+
+МЕТА РОБОТИ
+
+     Розробка бази даних для серверної частини  програмної системи та прикладного програмного інтерфейсу.
+
+ХІД РОБОТИ
+
+Проєкт розпочався з побудови UML-діаграми прецедентів, яка описує функції системи та способи взаємодії користувачів із нею (Додаток А).
+Наступним етапом було створення структури бази даних, яку візуалізовано у вигляді ER-діаграми (Додаток Б). На її основі розроблено схему бази даних у PostgreSQL з усіма необхідними таблицями та зв’язками між ними (Додаток В).
+Серверну частину системи реалізовано за допомогою Python і FastAPI. Для роботи з базою даних використовували SQLAlchemy як ORM, а Alembic застосовували для управління міграціями. API тестували через Swagger UI, який автоматично генерується FastAPI (Додаток Г).
+Архітектура системи побудована за трирівневим підходом:
+1.	Клієнтський рівень: обробка HTTP-запитів до API.
+2.	Серверний рівень: обробка логіки запитів у FastAPI.
+3.	Рівень даних: PostgreSQL як СУБД для зберігання інформації з використанням SQLAlchemy.
+Ключові технічні рішення:
+1.	FastAPI:
+-	Висока продуктивність та асинхронність.
+-	Інтеграція з OpenAPI (Swagger UI).
+-	Зручна валідація через Pydantic.
+2.	SQLAlchemy:
+-	Зручний ORM для роботи з базою даних.
+-	Можливість складних SQL-запитів.
+3.	Alembic, контроль версій змін у схемі бази даних.
+4.	Валідація даних:
+-	Перевірка вхідних даних через Pydantic.
+-	Додаткові обмеження на рівні SQLAlchemy (унікальність, обов'язковість значень).
+5.	PostgreSQL:
+-	Надійна та стабільна реляційна СУБД.
+-	Підтримка складних запитів та масштабованість.
+Реалізований API підтримує CRUD-операції для роботи з даними, а його специфікація представлена у Додатку Г. Тестування API виконували через Swagger UI, перевіряючи коректність роботи всіх ендпоінтів і валідацію даних.
+Основні фрагменти коду, що демонструють роботу серверної частини з базою даних через SQLAlchemy. Та взаємодію серверної частини з клієнтами через FastAPI. Подано у Додатку Д.
+Огляд функціональності системи супроводжується відеодемонстрацією (Додаток Е).
+
+ВИСНОВКИ
+
+У ході лабораторної роботи було реалізовано основну мету — створення серверної частини та API для системи інкубування яєць. Розробка включала етапи від створення UML-діаграм до документування API, що забезпечило чіткість процесу.
+Використання фреймворку FastAPI забезпечило гнучкість та масштабованість системи. ORM SQLAlchemy дозволила ефективно працювати з базою даних PostgreSQL, розміщеною в хмарі для зручного доступу та підвищеної продуктивності.
+Документування API через Swagger спростило інтеграцію з клієнтами, а публікація на GitHub зробила проєкт доступним для подальшого розвитку. Загалом, лабораторна робота продемонструвала ефективність сучасних методів розробки, що дозволяють створювати масштабовані й надійні рішення.
+
+
+ДОДАТОК А
+UML діаграма прецендентів
+
+ 
+Рисунок А – UML Діаграма прецедентів
+
+
+ДОДАТОК Б
+ER Діаграма бази даних
+
+ 
+Рисунок Б – ER діаграма бази даних
+
+
+ДОДАТОК В
+Діаграма структури бази даних
+
+ 
+Рисунок В – Діаграма структури бази даних
+
+
+ДОДАТОК Г
+Специфікація API 
+1. "paths": {
+2.     "/users/users/": {
+3.       "get": {
+4.         "tags": [
+5.           "Users"
+6.         ],
+7.         "summary": "Get All Users",
+8.         "operationId": "get_all_users_users_users__get",
+9.         "responses": {
+10.           "200": {
+11.             "description": "Successful Response",
+12.             "content": {
+13.               "application/json": {
+14.                 "schema": {
+15.                   "title": "Response Get All Users Users Users  Get",
+16.                   "type": "array",
+17.                   "items": {
+18.                     "$ref": "#/components/schemas/UserInDB"
+19.                   }
+20.                 }
+21.               }
+22.             }
+23.           }
+24.         }
+25.       },
+26.       "post": {
+27.         "tags": [
+28.           "Users"
+29.         ],
+30.         "summary": "Register User",
+31.         "operationId": "register_user_users_users__post",
+32.         "requestBody": {
+33.           "content": {
+34.             "application/json": {
+35.               "schema": {
+36.                 "$ref": "#/components/schemas/UserCreate"
+37.               }
+38.             }
+39.           },
+40.           "required": true
+41.         },
+42.         "responses": {
+43.           "201": {
+44.             "description": "Successful Response",
+45.             "content": {
+46.               "application/json": {
+47.                 "schema": {
+48.                   "$ref": "#/components/schemas/UserInDB"
+49.                 }
+50.               }
+51.             }
+52.           },
+53.           "422": {
+54.             "description": "Validation Error",
+55.             "content": {
+56.               "application/json": {
+57.                 "schema": {
+58.                   "$ref": "#/components/schemas/HTTPValidationError"
+59.                 }
+60.               }
+61.             }
+62.           }
+63.         }
+64.       }
+65.     },
+66.     "/users/users/login": {
+67.       "post": {
+68.         "tags": [
+69.           "Users"
+70.         ],
+71.         "summary": "Login User",
+72.         "operationId": "login_user_users_users_login_post",
+73.         "requestBody": {
+74.           "content": {
+75.             "application/json": {
+76.               "schema": {
+77.                 "$ref": "#/components/schemas/UserLogin"
+78.               }
+79.             }
+80.           },
+81.           "required": true
+82.         },
+83.         "responses": {
+84.           "200": {
+85.             "description": "Successful Response",
+86.             "content": {
+87.               "application/json": {
+88.                 "schema": {
+89.                   "$ref": "#/components/schemas/UserInDB"
+90.                 }
+91.               }
+92.             }
+93.           },
+94.           "422": {
+95.             "description": "Validation Error",
+96.             "content": {
+97.               "application/json": {
+98.                 "schema": {
+99.                   "$ref": "#/components/schemas/HTTPValidationError"
+100.                 }
+101.               }
+102.             }
+103.           }
+104.         }
+105.       }
+106.     },
+107.     "/users/users/{user_id}": {
+108.       "get": {
+109.         "tags": [
+110.           "Users"
+111.         ],
+112.         "summary": "Get User",
+113.         "operationId": "get_user_users_users__user_id__get",
+114.         "parameters": [
+115.           {
+116.             "required": true,
+117.             "schema": {
+118.               "title": "User Id",
+119.               "type": "integer"
+120.             },
+121.             "name": "user_id",
+122.             "in": "path"
+123.           }
+124.         ],
+125.         "responses": {
+126.           "200": {
+127.             "description": "Successful Response",
+128.             "content": {
+129.               "application/json": {
+130.                 "schema": {
+131.                   "$ref": "#/components/schemas/UserInDB"
+132.                 }
+133.               }
+134.             }
+135.           },
+136.           "422": {
+137.             "description": "Validation Error",
+138.             "content": {
+139.               "application/json": {
+140.                 "schema": {
+141.                   "$ref": "#/components/schemas/HTTPValidationError"
+142.                 }
+143.               }
+144.             }
+145.           }
+146.         }
+147.       },
+148.       "put": {
+149.         "tags": [
+150.           "Users"
+151.         ],
+152.         "summary": "Update User",
+153.         "operationId": "update_user_users_users__user_id__put",
+154.         "parameters": [
+155.           {
+156.             "required": true,
+157.             "schema": {
+158.               "title": "User Id",
+159.               "type": "integer"
+160.             },
+161.             "name": "user_id",
+162.             "in": "path"
+163.           }
+164.         ],
+165.         "requestBody": {
+166.           "content": {
+167.             "application/json": {
+168.               "schema": {
+169.                 "$ref": "#/components/schemas/UserUpdate"
+170.               }
+171.             }
+172.           },
+173.           "required": true
+174.         },
+175.         "responses": {
+176.           "200": {
+177.             "description": "Successful Response",
+178.             "content": {
+179.               "application/json": {
+180.                 "schema": {
+181.                   "$ref": "#/components/schemas/UserInDB"
+182.                 }
+183.               }
+184.             }
+185.           },
+186.           "422": {
+187.             "description": "Validation Error",
+188.             "content": {
+189.               "application/json": {
+190.                 "schema": {
+191.                   "$ref": "#/components/schemas/HTTPValidationError"
+192.                 }
+193.               }
+194.             }
+195.           }
+196.         }
+197.       },
+198.       "delete": {
+199.         "tags": [
+200.           "Users"
+201.         ],
+202.         "summary": "Delete User",
+203.         "operationId": "delete_user_users_users__user_id__delete",
+204.         "parameters": [
+205.           {
+206.             "required": true,
+207.             "schema": {
+208.               "title": "User Id",
+209.               "type": "integer"
+210.             },
+211.             "name": "user_id",
+212.             "in": "path"
+213.           }
+214.         ],
+215.         "responses": {
+216.           "200": {
+217.             "description": "Successful Response",
+218.             "content": {
+219.               "application/json": {
+220.                 "schema": {
+221.                   "$ref": "#/components/schemas/UserInDB"
+222.                 }
+223.               }
+224.             }
+225.           },
+226.           "422": {
+227.             "description": "Validation Error",
+228.             "content": {
+229.               "application/json": {
+230.                 "schema": {
+231.                   "$ref": "#/components/schemas/HTTPValidationError"
+232.                 }
+233.               }
+234.             }
+235.           }
+236.         }
+237.       }
+238.     },
+239.     "/incubators/incubators/": {
+240.       "get": {
+241.         "tags": [
+242.           "Incubators"
+243.         ],
+244.         "summary": "Get All Incubators",
+245.         "operationId": "get_all_incubators_incubators_incubators__get",
+246.         "responses": {
+247.           "200": {
+248.             "description": "Successful Response",
+249.             "content": {
+250.               "application/json": {
+251.                 "schema": {
+252.                   "title": "Response Get All Incubators Incubators Incubators  Get",
+253.                   "type": "array",
+254.                   "items": {
+255.                     "$ref": "#/components/schemas/IncubatorInDB"
+256.                   }
+257.                 }
+258.               }
+259.             }
+260.           }
+261.         }
+262.       }
+263.     },
+264.     "/incubators/incubators/{incubator_id}": {
+265.       "get": {
+266.         "tags": [
+267.           "Incubators"
+268.         ],
+269.         "summary": "Get Incubator",
+270.         "operationId": "get_incubator_incubators_incubators__incubator_id__get",
+271.         "parameters": [
+272.           {
+273.             "required": true,
+274.             "schema": {
+275.               "title": "Incubator Id",
+276.               "type": "integer"
+277.             },
+278.             "name": "incubator_id",
+279.             "in": "path"
+280.           }
+281.         ],
+282.         "responses": {
+283.           "200": {
+284.             "description": "Successful Response",
+285.             "content": {
+286.               "application/json": {
+287.                 "schema": {
+288.                   "$ref": "#/components/schemas/IncubatorInDB"
+289.                 }
+290.               }
+291.             }
+292.           },
+293.           "422": {
+294.             "description": "Validation Error",
+295.             "content": {
+296.               "application/json": {
+297.                 "schema": {
+298.                   "$ref": "#/components/schemas/HTTPValidationError"
+299.                 }
+300.               }
+301.             }
+302.           }
+303.         }
+304.       },
+305.       "put": {
+306.         "tags": [
+307.           "Incubators"
+308.         ],
+309.         "summary": "Update Incubator",
+310.         "operationId": "update_incubator_incubators_incubators__incubator_id__put",
+311.         "parameters": [
+312.           {
+313.             "required": true,
+314.             "schema": {
+315.               "title": "Incubator Id",
+316.               "type": "integer"
+317.             },
+318.             "name": "incubator_id",
+319.             "in": "path"
+320.           }
+321.         ],
+322.         "requestBody": {
+323.           "content": {
+324.             "application/json": {
+325.               "schema": {
+326.                 "$ref": "#/components/schemas/IncubatorUpdate"
+327.               }
+328.             }
+329.           },
+330.           "required": true
+331.         },
+332.         "responses": {
+333.           "200": {
+334.             "description": "Successful Response",
+335.             "content": {
+336.               "application/json": {
+337.                 "schema": {
+338.                   "$ref": "#/components/schemas/IncubatorInDB"
+339.                 }
+340.               }
+341.             }
+342.           },
+343.           "422": {
+344.             "description": "Validation Error",
+345.             "content": {
+346.               "application/json": {
+347.                 "schema": {
+348.                   "$ref": "#/components/schemas/HTTPValidationError"
+349.                 }
+350.               }
+351.             }
+352.           }
+353.         }
+354.       },
+355.       "delete": {
+356.         "tags": [
+357.           "Incubators"
+358.         ],
+359.         "summary": "Delete Incubator",
+360.         "operationId": "delete_incubator_incubators_incubators__incubator_id__delete",
+361.         "parameters": [
+362.           {
+363.             "required": true,
+364.             "schema": {
+365.               "title": "Incubator Id",
+366.               "type": "integer"
+367.             },
+368.             "name": "incubator_id",
+369.             "in": "path"
+370.           }
+371.         ],
+372.         "responses": {
+373.           "200": {
+374.             "description": "Successful Response",
+375.             "content": {
+376.               "application/json": {
+377.                 "schema": {
+378.                   "title": "Response Delete Incubator Incubators Incubators  Incubator Id  Delete",
+379.                   "type": "object"
+380.                 }
+381.               }
+382.             }
+383.           },
+384.           "422": {
+385.             "description": "Validation Error",
+386.             "content": {
+387.               "application/json": {
+388.                 "schema": {
+389.                   "$ref": "#/components/schemas/HTTPValidationError"
+390.                 }
+391.               }
+392.             }
+393.           }
+394.         }
+395.       }
+396.     },
+397.     "/incubators/incubators/with-user/{user_id}": {
+398.       "post": {
+399.         "tags": [
+400.           "Incubators"
+401.         ],
+402.         "summary": "Create Incubator With User",
+403.         "operationId": "create_incubator_with_user_incubators_incubators_with_user__user_id__post",
+404.         "parameters": [
+405.           {
+406.             "required": true,
+407.             "schema": {
+408.               "title": "User Id",
+409.               "type": "integer"
+410.             },
+411.             "name": "user_id",
+412.             "in": "path"
+413.           }
+414.         ],
+415.         "requestBody": {
+416.           "content": {
+417.             "application/json": {
+418.               "schema": {
+419.                 "$ref": "#/components/schemas/IncubatorCreate"
+420.               }
+421.             }
+422.           },
+423.           "required": true
+424.         },
+425.         "responses": {
+426.           "201": {
+427.             "description": "Successful Response",
+428.             "content": {
+429.               "application/json": {
+430.                 "schema": {
+431.                   "$ref": "#/components/schemas/IncubatorInDB"
+432.                 }
+433.               }
+434.             }
+435.           },
+436.           "422": {
+437.             "description": "Validation Error",
+438.             "content": {
+439.               "application/json": {
+440.                 "schema": {
+441.                   "$ref": "#/components/schemas/HTTPValidationError"
+442.                 }
+443.               }
+444.             }
+445.           }
+446.         }
+447.       }
+448.     },
+449.     "/devices/devices/": {
+450.       "get": {
+451.         "tags": [
+452.           "Devices"
+453.         ],
+454.         "summary": "Get All Devices",
+455.         "operationId": "get_all_devices_devices_devices__get",
+456.         "responses": {
+457.           "200": {
+458.             "description": "Successful Response",
+459.             "content": {
+460.               "application/json": {
+461.                 "schema": {
+462.                   "title": "Response Get All Devices Devices Devices  Get",
+463.                   "type": "array",
+464.                   "items": {
+465.                     "$ref": "#/components/schemas/DeviceInDB"
+466.                   }
+467.                 }
+468.               }
+469.             }
+470.           }
+471.         }
+472.       },
+473.       "post": {
+474.         "tags": [
+475.           "Devices"
+476.         ],
+477.         "summary": "Create Device",
+478.         "operationId": "create_device_devices_devices__post",
+479.         "requestBody": {
+480.           "content": {
+481.             "application/json": {
+482.               "schema": {
+483.                 "$ref": "#/components/schemas/DeviceCreate"
+484.               }
+485.             }
+486.           },
+487.           "required": true
+488.         },
+489.         "responses": {
+490.           "201": {
+491.             "description": "Successful Response",
+492.             "content": {
+493.               "application/json": {
+494.                 "schema": {
+495.                   "$ref": "#/components/schemas/DeviceInDB"
+496.                 }
+497.               }
+498.             }
+499.           },
+500.           "422": {
+501.             "description": "Validation Error",
+502.             "content": {
+503.               "application/json": {
+504.                 "schema": {
+505.                   "$ref": "#/components/schemas/HTTPValidationError"
+506.                 }
+507.               }
+508.             }
+509.           }
+510.         }
+511.       }
+512.     },
+513.     "/devices/devices/{device_id}": {
+514.       "get": {
+515.         "tags": [
+516.           "Devices"
+517.         ],
+518.         "summary": "Get Device",
+519.         "operationId": "get_device_devices_devices__device_id__get",
+520.         "parameters": [
+521.           {
+522.             "required": true,
+523.             "schema": {
+524.               "title": "Device Id",
+525.               "type": "integer"
+526.             },
+527.             "name": "device_id",
+528.             "in": "path"
+529.           }
+530.         ],
+531.         "responses": {
+532.           "200": {
+533.             "description": "Successful Response",
+534.             "content": {
+535.               "application/json": {
+536.                 "schema": {
+537.                   "$ref": "#/components/schemas/DeviceInDB"
+538.                 }
+539.               }
+540.             }
+541.           },
+542.           "422": {
+543.             "description": "Validation Error",
+544.             "content": {
+545.               "application/json": {
+546.                 "schema": {
+547.                   "$ref": "#/components/schemas/HTTPValidationError"
+548.                 }
+549.               }
+550.             }
+551.           }
+552.         }
+553.       },
+554.       "put": {
+555.         "tags": [
+556.           "Devices"
+557.         ],
+558.         "summary": "Update Device",
+559.         "operationId": "update_device_devices_devices__device_id__put",
+560.         "parameters": [
+561.           {
+562.             "required": true,
+563.             "schema": {
+564.               "title": "Device Id",
+565.               "type": "integer"
+566.             },
+567.             "name": "device_id",
+568.             "in": "path"
+569.           }
+570.         ],
+571.         "requestBody": {
+572.           "content": {
+573.             "application/json": {
+574.               "schema": {
+575.                 "$ref": "#/components/schemas/DeviceUpdate"
+576.               }
+577.             }
+578.           },
+579.           "required": true
+580.         },
+581.         "responses": {
+582.           "200": {
+583.             "description": "Successful Response",
+584.             "content": {
+585.               "application/json": {
+586.                 "schema": {
+587.                   "$ref": "#/components/schemas/DeviceInDB"
+588.                 }
+589.               }
+590.             }
+591.           },
+592.           "422": {
+593.             "description": "Validation Error",
+594.             "content": {
+595.               "application/json": {
+596.                 "schema": {
+597.                   "$ref": "#/components/schemas/HTTPValidationError"
+598.                 }
+599.               }
+600.             }
+601.           }
+602.         }
+603.       },
+604.       "delete": {
+605.         "tags": [
+606.           "Devices"
+607.         ],
+608.         "summary": "Delete Device",
+609.         "operationId": "delete_device_devices_devices__device_id__delete",
+610.         "parameters": [
+611.           {
+612.             "required": true,
+613.             "schema": {
+614.               "title": "Device Id",
+615.               "type": "integer"
+616.             },
+617.             "name": "device_id",
+618.             "in": "path"
+619.           }
+620.         ],
+621.         "responses": {
+622.           "200": {
+623.             "description": "Successful Response",
+624.             "content": {
+625.               "application/json": {
+626.                 "schema": {
+627.                   "title": "Response Delete Device Devices Devices  Device Id  Delete",
+628.                   "type": "object"
+629.                 }
+630.               }
+631.             }
+632.           },
+633.           "422": {
+634.             "description": "Validation Error",
+635.             "content": {
+636.               "application/json": {
+637.                 "schema": {
+638.                   "$ref": "#/components/schemas/HTTPValidationError"
+639.                 }
+640.               }
+641.             }
+642.           }
+643.         }
+644.       }
+645.     },
+646.     "/sensor-readings/sensor_readings/": {
+647.       "get": {
+648.         "tags": [
+649.           "Sensor Readings"
+650.         ],
+651.         "summary": "Get All Sensor Readings",
+652.         "operationId": "get_all_sensor_readings_sensor_readings_sensor_readings__get",
+653.         "responses": {
+654.           "200": {
+655.             "description": "Successful Response",
+656.             "content": {
+657.               "application/json": {
+658.                 "schema": {
+659.                   "title": "Response Get All Sensor Readings Sensor Readings Sensor Readings  Get",
+660.                   "type": "array",
+661.                   "items": {
+662.                     "$ref": "#/components/schemas/SensorReadingInDB"
+663.                   }
+664.                 }
+665.               }
+666.             }
+667.           }
+668.         }
+669.       },
+670.       "post": {
+671.         "tags": [
+672.           "Sensor Readings"
+673.         ],
+674.         "summary": "Create Sensor Reading",
+675.         "operationId": "create_sensor_reading_sensor_readings_sensor_readings__post",
+676.         "requestBody": {
+677.           "content": {
+678.             "application/json": {
+679.               "schema": {
+680.                 "$ref": "#/components/schemas/SensorReadingCreate"
+681.               }
+682.             }
+683.           },
+684.           "required": true
+685.         },
+686.         "responses": {
+687.           "201": {
+688.             "description": "Successful Response",
+689.             "content": {
+690.               "application/json": {
+691.                 "schema": {
+692.                   "$ref": "#/components/schemas/SensorReadingInDB"
+693.                 }
+694.               }
+695.             }
+696.           },
+697.           "422": {
+698.             "description": "Validation Error",
+699.             "content": {
+700.               "application/json": {
+701.                 "schema": {
+702.                   "$ref": "#/components/schemas/HTTPValidationError"
+703.                 }
+704.               }
+705.             }
+706.           }
+707.         }
+708.       }
+709.     },
+710.     "/sensor-readings/sensor_readings/{reading_id}": {
+711.       "put": {
+712.         "tags": [
+713.           "Sensor Readings"
+714.         ],
+715.         "summary": "Update Sensor Reading",
+716.         "operationId": "update_sensor_reading_sensor_readings_sensor_readings__reading_id__put",
+717.         "parameters": [
+718.           {
+719.             "required": true,
+720.             "schema": {
+721.               "title": "Reading Id",
+722.               "type": "integer"
+723.             },
+724.             "name": "reading_id",
+725.             "in": "path"
+726.           }
+727.         ],
+728.         "requestBody": {
+729.           "content": {
+730.             "application/json": {
+731.               "schema": {
+732.                 "$ref": "#/components/schemas/SensorReadingUpdate"
+733.               }
+734.             }
+735.           },
+736.           "required": true
+737.         },
+738.         "responses": {
+739.           "200": {
+740.             "description": "Successful Response",
+741.             "content": {
+742.               "application/json": {
+743.                 "schema": {
+744.                   "$ref": "#/components/schemas/SensorReadingInDB"
+745.                 }
+746.               }
+747.             }
+748.           },
+749.           "422": {
+750.             "description": "Validation Error",
+751.             "content": {
+752.               "application/json": {
+753.                 "schema": {
+754.                   "$ref": "#/components/schemas/HTTPValidationError"
+755.                 }
+756.               }
+757.             }
+758.           }
+759.         }
+760.       }
+761.     },
+762.     "/sensor-readings/sensor_reading/{reading_id}": {
+763.       "get": {
+764.         "tags": [
+765.           "Sensor Readings"
+766.         ],
+767.         "summary": "Get Sensor Reading",
+768.         "operationId": "get_sensor_reading_sensor_readings_sensor_reading__reading_id__get",
+769.         "parameters": [
+770.           {
+771.             "required": true,
+772.             "schema": {
+773.               "title": "Reading Id",
+774.               "type": "integer"
+775.             },
+776.             "name": "reading_id",
+777.             "in": "path"
+778.           }
+779.         ],
+780.         "responses": {
+781.           "200": {
+782.             "description": "Successful Response",
+783.             "content": {
+784.               "application/json": {
+785.                 "schema": {
+786.                   "$ref": "#/components/schemas/SensorReadingInDB"
+787.                 }
+788.               }
+789.             }
+790.           },
+791.           "422": {
+792.             "description": "Validation Error",
+793.             "content": {
+794.               "application/json": {
+795.                 "schema": {
+796.                   "$ref": "#/components/schemas/HTTPValidationError"
+797.                 }
+798.               }
+799.             }
+800.           }
+801.         }
+802.       }
+803.     },
+804.     "/sensor-readings/sensor_reading/{device_id}": {
+805.       "get": {
+806.         "tags": [
+807.           "Sensor Readings"
+808.         ],
+809.         "summary": "Get Sensor Readings By Device Id",
+810.         "operationId": "get_sensor_readings_by_device_id_sensor_readings_sensor_reading__device_id__get",
+811.         "parameters": [
+812.           {
+813.             "required": true,
+814.             "schema": {
+815.               "title": "Device Id",
+816.               "type": "integer"
+817.             },
+818.             "name": "device_id",
+819.             "in": "path"
+820.           }
+821.         ],
+822.         "responses": {
+823.           "200": {
+824.             "description": "Successful Response",
+825.             "content": {
+826.               "application/json": {
+827.                 "schema": {
+828.                   "title": "Response Get Sensor Readings By Device Id Sensor Readings Sensor Reading  Device Id  Get",
+829.                   "type": "array",
+830.                   "items": {
+831.                     "$ref": "#/components/schemas/SensorReadingInDB"
+832.                   }
+833.                 }
+834.               }
+835.             }
+836.           },
+837.           "422": {
+838.             "description": "Validation Error",
+839.             "content": {
+840.               "application/json": {
+841.                 "schema": {
+842.                   "$ref": "#/components/schemas/HTTPValidationError"
+843.                 }
+844.               }
+845.             }
+846.           }
+847.         }
+848.       }
+849.     },
+850.     "/alerts/alerts/": {
+851.       "get": {
+852.         "tags": [
+853.           "Alerts"
+854.         ],
+855.         "summary": "Get All Alerts",
+856.         "operationId": "get_all_alerts_alerts_alerts__get",
+857.         "responses": {
+858.           "200": {
+859.             "description": "Successful Response",
+860.             "content": {
+861.               "application/json": {
+862.                 "schema": {
+863.                   "title": "Response Get All Alerts Alerts Alerts  Get",
+864.                   "type": "array",
+865.                   "items": {
+866.                     "$ref": "#/components/schemas/AlertInDB"
+867.                   }
+868.                 }
+869.               }
+870.             }
+871.           }
+872.         }
+873.       },
+874.       "post": {
+875.         "tags": [
+876.           "Alerts"
+877.         ],
+878.         "summary": "Create Alert",
+879.         "operationId": "create_alert_alerts_alerts__post",
+880.         "requestBody": {
+881.           "content": {
+882.             "application/json": {
+883.               "schema": {
+884.                 "$ref": "#/components/schemas/AlertCreate"
+885.               }
+886.             }
+887.           },
+888.           "required": true
+889.         },
+890.         "responses": {
+891.           "201": {
+892.             "description": "Successful Response",
+893.             "content": {
+894.               "application/json": {
+895.                 "schema": {
+896.                   "$ref": "#/components/schemas/AlertInDB"
+897.                 }
+898.               }
+899.             }
+900.           },
+901.           "422": {
+902.             "description": "Validation Error",
+903.             "content": {
+904.               "application/json": {
+905.                 "schema": {
+906.                   "$ref": "#/components/schemas/HTTPValidationError"
+907.                 }
+908.               }
+909.             }
+910.           }
+911.         }
+912.       }
+913.     },
+914.     "/alerts/alerts/{alert_id}": {
+915.       "get": {
+916.         "tags": [
+917.           "Alerts"
+918.         ],
+919.         "summary": "Get Alert",
+920.         "operationId": "get_alert_alerts_alerts__alert_id__get",
+921.         "parameters": [
+922.           {
+923.             "required": true,
+924.             "schema": {
+925.               "title": "Alert Id",
+926.               "type": "integer"
+927.             },
+928.             "name": "alert_id",
+929.             "in": "path"
+930.           }
+931.         ],
+932.         "responses": {
+933.           "200": {
+934.             "description": "Successful Response",
+935.             "content": {
+936.               "application/json": {
+937.                 "schema": {
+938.                   "$ref": "#/components/schemas/AlertInDB"
+939.                 }
+940.               }
+941.             }
+942.           },
+943.           "422": {
+944.             "description": "Validation Error",
+945.             "content": {
+946.               "application/json": {
+947.                 "schema": {
+948.                   "$ref": "#/components/schemas/HTTPValidationError"
+949.                 }
+950.               }
+951.             }
+952.           }
+953.         }
+954.       },
+955.       "put": {
+956.         "tags": [
+957.           "Alerts"
+958.         ],
+959.         "summary": "Update Alert",
+960.         "operationId": "update_alert_alerts_alerts__alert_id__put",
+961.         "parameters": [
+962.           {
+963.             "required": true,
+964.             "schema": {
+965.               "title": "Alert Id",
+966.               "type": "integer"
+967.             },
+968.             "name": "alert_id",
+969.             "in": "path"
+970.           }
+971.         ],
+972.         "requestBody": {
+973.           "content": {
+974.             "application/json": {
+975.               "schema": {
+976.                 "$ref": "#/components/schemas/AlertUpdate"
+977.               }
+978.             }
+979.           },
+980.           "required": true
+981.         },
+982.         "responses": {
+983.           "200": {
+984.             "description": "Successful Response",
+985.             "content": {
+986.               "application/json": {
+987.                 "schema": {
+988.                   "$ref": "#/components/schemas/AlertInDB"
+989.                 }
+990.               }
+991.             }
+992.           },
+993.           "422": {
+994.             "description": "Validation Error",
+995.             "content": {
+996.               "application/json": {
+997.                 "schema": {
+998.                   "$ref": "#/components/schemas/HTTPValidationError"
+999.                 }
+1000.               }
+1001.             }
+1002.           }
+1003.         }
+1004.       },
+1005.       "delete": {
+1006.         "tags": [
+1007.           "Alerts"
+1008.         ],
+1009.         "summary": "Delete Alert",
+1010.         "operationId": "delete_alert_alerts_alerts__alert_id__delete",
+1011.         "parameters": [
+1012.           {
+1013.             "required": true,
+1014.             "schema": {
+1015.               "title": "Alert Id",
+1016.               "type": "integer"
+1017.             },
+1018.             "name": "alert_id",
+1019.             "in": "path"
+1020.           }
+1021.         ],
+1022.         "responses": {
+1023.           "200": {
+1024.             "description": "Successful Response",
+1025.             "content": {
+1026.               "application/json": {
+1027.                 "schema": {
+1028.                   "title": "Response Delete Alert Alerts Alerts  Alert Id  Delete",
+1029.                   "type": "object"
+1030.                 }
+1031.               }
+1032.             }
+1033.           },
+1034.           "422": {
+1035.             "description": "Validation Error",
+1036.             "content": {
+1037.               "application/json": {
+1038.                 "schema": {
+1039.                   "$ref": "#/components/schemas/HTTPValidationError"
+1040.                 }
+1041.               }
+1042.             }
+1043.           }
+1044.         }
+1045.       }
+1046.     },
+1047.     "/alert-history/alert_history/": {
+1048.       "get": {
+1049.         "tags": [
+1050.           "Alert History"
+1051.         ],
+1052.         "summary": "Get All Alert History",
+1053.         "operationId": "get_all_alert_history_alert_history_alert_history__get",
+1054.         "responses": {
+1055.           "200": {
+1056.             "description": "Successful Response",
+1057.             "content": {
+1058.               "application/json": {
+1059.                 "schema": {
+1060.                   "title": "Response Get All Alert History Alert History Alert History  Get",
+1061.                   "type": "array",
+1062.                   "items": {
+1063.                     "$ref": "#/components/schemas/AlertHistoryInDB"
+1064.                   }
+1065.                 }
+1066.               }
+1067.             }
+1068.           }
+1069.         }
+1070.       },
+1071.       "post": {
+1072.         "tags": [
+1073.           "Alert History"
+1074.         ],
+1075.         "summary": "Create Alert History",
+1076.         "operationId": "create_alert_history_alert_history_alert_history__post",
+1077.         "requestBody": {
+1078.           "content": {
+1079.             "application/json": {
+1080.               "schema": {
+1081.                 "$ref": "#/components/schemas/AlertHistoryCreate"
+1082.               }
+1083.             }
+1084.           },
+1085.           "required": true
+1086.         },
+1087.         "responses": {
+1088.           "201": {
+1089.             "description": "Successful Response",
+1090.             "content": {
+1091.               "application/json": {
+1092.                 "schema": {
+1093.                   "$ref": "#/components/schemas/AlertHistoryInDB"
+1094.                 }
+1095.               }
+1096.             }
+1097.           },
+1098.           "422": {
+1099.             "description": "Validation Error",
+1100.             "content": {
+1101.               "application/json": {
+1102.                 "schema": {
+1103.                   "$ref": "#/components/schemas/HTTPValidationError"
+1104.                 }
+1105.               }
+1106.             }
+1107.           }
+1108.         }
+1109.       }
+1110.     },
+1111.     "/alert-history/alert_history/{history_id}": {
+1112.       "get": {
+1113.         "tags": [
+1114.           "Alert History"
+1115.         ],
+1116.         "summary": "Get Alert History By Id",
+1117.         "operationId": "get_alert_history_by_id_alert_history_alert_history__history_id__get",
+1118.         "parameters": [
+1119.           {
+1120.             "required": true,
+1121.             "schema": {
+1122.               "title": "History Id",
+1123.               "type": "integer"
+1124.             },
+1125.             "name": "history_id",
+1126.             "in": "path"
+1127.           }
+1128.         ],
+1129.         "responses": {
+1130.           "200": {
+1131.             "description": "Successful Response",
+1132.             "content": {
+1133.               "application/json": {
+1134.                 "schema": {
+1135.                   "$ref": "#/components/schemas/AlertHistoryInDB"
+1136.                 }
+1137.               }
+1138.             }
+1139.           },
+1140.           "422": {
+1141.             "description": "Validation Error",
+1142.             "content": {
+1143.               "application/json": {
+1144.                 "schema": {
+1145.                   "$ref": "#/components/schemas/HTTPValidationError"
+1146.                 }
+1147.               }
+1148.             }
+1149.           }
+1150.         }
+1151.       },
+1152.       "put": {
+1153.         "tags": [
+1154.           "Alert History"
+1155.         ],
+1156.         "summary": "Update Alert History",
+1157.         "operationId": "update_alert_history_alert_history_alert_history__history_id__put",
+1158.         "parameters": [
+1159.           {
+1160.             "required": true,
+1161.             "schema": {
+1162.               "title": "History Id",
+1163.               "type": "integer"
+1164.             },
+1165.             "name": "history_id",
+1166.             "in": "path"
+1167.           }
+1168.         ],
+1169.         "requestBody": {
+1170.           "content": {
+1171.             "application/json": {
+1172.               "schema": {
+1173.                 "$ref": "#/components/schemas/AlertHistoryUpdate"
+1174.               }
+1175.             }
+1176.           },
+1177.           "required": true
+1178.         },
+1179.         "responses": {
+1180.           "200": {
+1181.             "description": "Successful Response",
+1182.             "content": {
+1183.               "application/json": {
+1184.                 "schema": {
+1185.                   "$ref": "#/components/schemas/AlertHistoryInDB"
+1186.                 }
+1187.               }
+1188.             }
+1189.           },
+1190.           "422": {
+1191.             "description": "Validation Error",
+1192.             "content": {
+1193.               "application/json": {
+1194.                 "schema": {
+1195.                   "$ref": "#/components/schemas/HTTPValidationError"
+1196.                 }
+1197.               }
+1198.             }
+1199.           }
+1200.         }
+1201.       }
+1202.     }
+1203.   },
+1204.   "components": {
+1205.     "schemas": {
+1206.       "AlertCreate": {
+1207.         "title": "AlertCreate",
+1208.         "required": [
+1209.           "incubator_id",
+1210.           "message"
+1211.         ],
+1212.         "type": "object",
+1213.         "properties": {
+1214.           "incubator_id": {
+1215.             "title": "Incubator Id",
+1216.             "type": "integer"
+1217.           },
+1218.           "message": {
+1219.             "title": "Message",
+1220.             "type": "string"
+1221.           },
+1222.           "resolved": {
+1223.             "title": "Resolved",
+1224.             "type": "boolean",
+1225.             "default": false
+1226.           }
+1227.         }
+1228.       },
+1229.       "AlertHistoryCreate": {
+1230.         "title": "AlertHistoryCreate",
+1231.         "required": [
+1232.           "alert_id",
+1233.           "status",
+1234.           "created_by"
+1235.         ],
+1236.         "type": "object",
+1237.         "properties": {
+1238.           "alert_id": {
+1239.             "title": "Alert Id",
+1240.             "type": "integer"
+1241.           },
+1242.           "status": {
+1243.             "title": "Status",
+1244.             "type": "string"
+1245.           },
+1246.           "changed_at": {
+1247.             "title": "Changed At",
+1248.             "type": "string",
+1249.             "format": "date-time"
+1250.           },
+1251.           "created_by": {
+1252.             "title": "Created By",
+1253.             "type": "string"
+1254.           }
+1255.         }
+1256.       },
+1257.       "AlertHistoryInDB": {
+1258.         "title": "AlertHistoryInDB",
+1259.         "required": [
+1260.           "alert_id",
+1261.           "status",
+1262.           "created_by",
+1263.           "history_id"
+1264.         ],
+1265.         "type": "object",
+1266.         "properties": {
+1267.           "alert_id": {
+1268.             "title": "Alert Id",
+1269.             "type": "integer"
+1270.           },
+1271.           "status": {
+1272.             "title": "Status",
+1273.             "type": "string"
+1274.           },
+1275.           "changed_at": {
+1276.             "title": "Changed At",
+1277.             "type": "string",
+1278.             "format": "date-time"
+1279.           },
+1280.           "created_by": {
+1281.             "title": "Created By",
+1282.             "type": "string"
+1283.           },
+1284.           "history_id": {
+1285.             "title": "History Id",
+1286.             "type": "integer"
+1287.           }
+1288.         }
+1289.       },
+1290.       "AlertHistoryUpdate": {
+1291.         "title": "AlertHistoryUpdate",
+1292.         "type": "object",
+1293.         "properties": {
+1294.           "status": {
+1295.             "title": "Status",
+1296.             "type": "string"
+1297.           },
+1298.           "changed_at": {
+1299.             "title": "Changed At",
+1300.             "type": "string",
+1301.             "format": "date-time"
+1302.           }
+1303.         }
+1304.       },
+1305.       "AlertInDB": {
+1306.         "title": "AlertInDB",
+1307.         "required": [
+1308.           "incubator_id",
+1309.           "message",
+1310.           "alert_id",
+1311.           "created_at"
+1312.         ],
+1313.         "type": "object",
+1314.         "properties": {
+1315.           "incubator_id": {
+1316.             "title": "Incubator Id",
+1317.             "type": "integer"
+1318.           },
+1319.           "message": {
+1320.             "title": "Message",
+1321.             "type": "string"
+1322.           },
+1323.           "resolved": {
+1324.             "title": "Resolved",
+1325.             "type": "boolean",
+1326.             "default": false
+1327.           },
+1328.           "alert_id": {
+1329.             "title": "Alert Id",
+1330.             "type": "integer"
+1331.           },
+1332.           "created_at": {
+1333.             "title": "Created At",
+1334.             "type": "string",
+1335.             "format": "date-time"
+1336.           }
+1337.         }
+1338.       },
+1339.       "AlertUpdate": {
+1340.         "title": "AlertUpdate",
+1341.         "type": "object",
+1342.         "properties": {
+1343.           "message": {
+1344.             "title": "Message",
+1345.             "type": "string"
+1346.           },
+1347.           "resolved": {
+1348.             "title": "Resolved",
+1349.             "type": "boolean"
+1350.           }
+1351.         }
+1352.       },
+1353.       "DeviceCreate": {
+1354.         "title": "DeviceCreate",
+1355.         "required": [
+1356.           "device_type",
+1357.           "incubator_id"
+1358.         ],
+1359.         "type": "object",
+1360.         "properties": {
+1361.           "device_type": {
+1362.             "title": "Device Type",
+1363.             "type": "string"
+1364.           },
+1365.           "incubator_id": {
+1366.             "title": "Incubator Id",
+1367.             "type": "integer"
+1368.           },
+1369.           "last_reported_at": {
+1370.             "title": "Last Reported At",
+1371.             "type": "string",
+1372.             "format": "date-time"
+1373.           }
+1374.         }
+1375.       },
+1376.       "DeviceInDB": {
+1377.         "title": "DeviceInDB",
+1378.         "required": [
+1379.           "device_type",
+1380.           "incubator_id",
+1381.           "device_id"
+1382.         ],
+1383.         "type": "object",
+1384.         "properties": {
+1385.           "device_type": {
+1386.             "title": "Device Type",
+1387.             "type": "string"
+1388.           },
+1389.           "incubator_id": {
+1390.             "title": "Incubator Id",
+1391.             "type": "integer"
+1392.           },
+1393.           "last_reported_at": {
+1394.             "title": "Last Reported At",
+1395.             "type": "string",
+1396.             "format": "date-time"
+1397.           },
+1398.           "device_id": {
+1399.             "title": "Device Id",
+1400.             "type": "integer"
+1401.           }
+1402.         }
+1403.       },
+1404.       "DeviceUpdate": {
+1405.         "title": "DeviceUpdate",
+1406.         "type": "object",
+1407.         "properties": {
+1408.           "device_type": {
+1409.             "title": "Device Type",
+1410.             "type": "string"
+1411.           },
+1412.           "incubator_id": {
+1413.             "title": "Incubator Id",
+1414.             "type": "integer"
+1415.           },
+1416.           "last_reported_at": {
+1417.             "title": "Last Reported At",
+1418.             "type": "string",
+1419.             "format": "date-time"
+1420.           }
+1421.         }
+1422.       },
+1423.       "HTTPValidationError": {
+1424.         "title": "HTTPValidationError",
+1425.         "type": "object",
+1426.         "properties": {
+1427.           "detail": {
+1428.             "title": "Detail",
+1429.             "type": "array",
+1430.             "items": {
+1431.               "$ref": "#/components/schemas/ValidationError"
+1432.             }
+1433.           }
+1434.         }
+1435.       },
+1436.       "IncubatorCreate": {
+1437.         "title": "IncubatorCreate",
+1438.         "required": [
+1439.           "incubator_name",
+1440.           "capacity",
+1441.           "status",
+1442.           "target_temperature",
+1443.           "target_humidity"
+1444.         ],
+1445.         "type": "object",
+1446.         "properties": {
+1447.           "incubator_name": {
+1448.             "title": "Incubator Name",
+1449.             "type": "string"
+1450.           },
+1451.           "capacity": {
+1452.             "title": "Capacity",
+1453.             "type": "integer"
+1454.           },
+1455.           "status": {
+1456.             "title": "Status",
+1457.             "type": "string"
+1458.           },
+1459.           "filled_at": {
+1460.             "title": "Filled At",
+1461.             "type": "string",
+1462.             "format": "date"
+1463.           },
+1464.           "target_temperature": {
+1465.             "title": "Target Temperature",
+1466.             "type": "number"
+1467.           },
+1468.           "target_humidity": {
+1469.             "title": "Target Humidity",
+1470.             "type": "number"
+1471.           }
+1472.         }
+1473.       },
+1474.       "IncubatorInDB": {
+1475.         "title": "IncubatorInDB",
+1476.         "required": [
+1477.           "incubator_name",
+1478.           "capacity",
+1479.           "status",
+1480.           "filled_at",
+1481.           "target_temperature",
+1482.           "target_humidity",
+1483.           "incubator_id"
+1484.         ],
+1485.         "type": "object",
+1486.         "properties": {
+1487.           "incubator_name": {
+1488.             "title": "Incubator Name",
+1489.             "type": "string"
+1490.           },
+1491.           "capacity": {
+1492.             "title": "Capacity",
+1493.             "type": "integer"
+1494.           },
+1495.           "status": {
+1496.             "title": "Status",
+1497.             "type": "string"
+1498.           },
+1499.           "filled_at": {
+1500.             "title": "Filled At",
+1501.             "type": "string",
+1502.             "format": "date"
+1503.           },
+1504.           "target_temperature": {
+1505.             "title": "Target Temperature",
+1506.             "type": "number"
+1507.           },
+1508.           "target_humidity": {
+1509.             "title": "Target Humidity",
+1510.             "type": "number"
+1511.           },
+1512.           "incubator_id": {
+1513.             "title": "Incubator Id",
+1514.             "type": "integer"
+1515.           }
+1516.         }
+1517.       },
+1518.       "IncubatorUpdate": {
+1519.         "title": "IncubatorUpdate",
+1520.         "type": "object",
+1521.         "properties": {
+1522.           "incubator_name": {
+1523.             "title": "Incubator Name",
+1524.             "type": "string"
+1525.           },
+1526.           "capacity": {
+1527.             "title": "Capacity",
+1528.             "type": "integer"
+1529.           },
+1530.           "status": {
+1531.             "title": "Status",
+1532.             "type": "string"
+1533.           },
+1534.           "filled_at": {
+1535.             "title": "Filled At",
+1536.             "type": "string",
+1537.             "format": "date"
+1538.           },
+1539.           "target_temperature": {
+1540.             "title": "Target Temperature",
+1541.             "type": "number"
+1542.           },
+1543.           "target_humidity": {
+1544.             "title": "Target Humidity",
+1545.             "type": "number"
+1546.           }
+1547.         }
+1548.       },
+1549.       "SensorReadingCreate": {
+1550.         "title": "SensorReadingCreate",
+1551.         "required": [
+1552.           "device_id",
+1553.           "value_type",
+1554.           "value"
+1555.         ],
+1556.         "type": "object",
+1557.         "properties": {
+1558.           "device_id": {
+1559.             "title": "Device Id",
+1560.             "type": "integer"
+1561.           },
+1562.           "value_type": {
+1563.             "title": "Value Type",
+1564.             "type": "string"
+1565.           },
+1566.           "value": {
+1567.             "title": "Value",
+1568.             "type": "number"
+1569.           },
+1570.           "recorded_at": {
+1571.             "title": "Recorded At",
+1572.             "type": "string",
+1573.             "format": "date-time"
+1574.           }
+1575.         }
+1576.       },
+1577.       "SensorReadingInDB": {
+1578.         "title": "SensorReadingInDB",
+1579.         "required": [
+1580.           "device_id",
+1581.           "value_type",
+1582.           "value",
+1583.           "reading_id"
+1584.         ],
+1585.         "type": "object",
+1586.         "properties": {
+1587.           "device_id": {
+1588.             "title": "Device Id",
+1589.             "type": "integer"
+1590.           },
+1591.           "value_type": {
+1592.             "title": "Value Type",
+1593.             "type": "string"
+1594.           },
+1595.           "value": {
+1596.             "title": "Value",
+1597.             "type": "number"
+1598.           },
+1599.           "recorded_at": {
+1600.             "title": "Recorded At",
+1601.             "type": "string",
+1602.             "format": "date-time"
+1603.           },
+1604.           "reading_id": {
+1605.             "title": "Reading Id",
+1606.             "type": "integer"
+1607.           }
+1608.         }
+1609.       },
+1610.       "SensorReadingUpdate": {
+1611.         "title": "SensorReadingUpdate",
+1612.         "type": "object",
+1613.         "properties": {
+1614.           "value_type": {
+1615.             "title": "Value Type",
+1616.             "type": "string"
+1617.           },
+1618.           "value": {
+1619.             "title": "Value",
+1620.             "type": "number"
+1621.           },
+1622.           "recorded_at": {
+1623.             "title": "Recorded At",
+1624.             "type": "string",
+1625.             "format": "date-time"
+1626.           }
+1627.         }
+1628.       },
+1629.       "UserCreate": {
+1630.         "title": "UserCreate",
+1631.         "required": [
+1632.           "username",
+1633.           "email",
+1634.           "role",
+1635.           "password"
+1636.         ],
+1637.         "type": "object",
+1638.         "properties": {
+1639.           "username": {
+1640.             "title": "Username",
+1641.             "type": "string"
+1642.           },
+1643.           "email": {
+1644.             "title": "Email",
+1645.             "type": "string",
+1646.             "format": "email"
+1647.           },
+1648.           "role": {
+1649.             "$ref": "#/components/schemas/UserRole"
+1650.           },
+1651.           "password": {
+1652.             "title": "Password",
+1653.             "type": "string"
+1654.           }
+1655.         }
+1656.       },
+1657.       "UserInDB": {
+1658.         "title": "UserInDB",
+1659.         "required": [
+1660.           "username",
+1661.           "email",
+1662.           "role",
+1663.           "user_id",
+1664.           "created_at"
+1665.         ],
+1666.         "type": "object",
+1667.         "properties": {
+1668.           "username": {
+1669.             "title": "Username",
+1670.             "type": "string"
+1671.           },
+1672.           "email": {
+1673.             "title": "Email",
+1674.             "type": "string",
+1675.             "format": "email"
+1676.           },
+1677.           "role": {
+1678.             "$ref": "#/components/schemas/UserRole"
+1679.           },
+1680.           "user_id": {
+1681.             "title": "User Id",
+1682.             "type": "integer"
+1683.           },
+1684.           "created_at": {
+1685.             "title": "Created At",
+1686.             "type": "string",
+1687.             "format": "date-time"
+1688.           }
+1689.         }
+1690.       },
+1691.       "UserLogin": {
+1692.         "title": "UserLogin",
+1693.         "required": [
+1694.           "email",
+1695.           "password"
+1696.         ],
+1697.         "type": "object",
+1698.         "properties": {
+1699.           "email": {
+1700.             "title": "Email",
+1701.             "type": "string",
+1702.             "format": "email"
+1703.           },
+1704.           "password": {
+1705.             "title": "Password",
+1706.             "type": "string"
+1707.           }
+1708.         }
+1709.       },
+1710.       "UserRole": {
+1711.         "title": "UserRole",
+1712.         "enum": [
+1713.           "user",
+1714.           "admin"
+1715.         ],
+1716.         "type": "string",
+1717.         "description": "An enumeration."
+1718.       },
+1719.       "UserUpdate": {
+1720.         "title": "UserUpdate",
+1721.         "type": "object",
+1722.         "properties": {
+1723.           "username": {
+1724.             "title": "Username",
+1725.             "type": "string"
+1726.           },
+1727.           "password": {
+1728.             "title": "Password",
+1729.             "type": "string"
+1730.           },
+1731.           "role": {
+1732.             "$ref": "#/components/schemas/UserRole"
+1733.           }
+1734.         }
+1735.       },
+1736.       "ValidationError": {
+1737.         "title": "ValidationError",
+1738.         "required": [
+1739.           "loc",
+1740.           "msg",
+1741.           "type"
+1742.         ],
+1743.         "type": "object",
+1744.         "properties": {
+1745.           "loc": {
+1746.             "title": "Location",
+1747.             "type": "array",
+1748.             "items": {
+1749.               "anyOf": [
+1750.                 {
+1751.                   "type": "string"
+1752.                 },
+1753.                 {
+1754.                   "type": "integer"
+1755.                 }
+1756.               ]
+1757.             }
+1758.           },
+1759.           "msg": {
+1760.             "title": "Message",
+1761.             "type": "string"
+1762.           },
+1763.           "type": {
+1764.             "title": "Error Type",
+1765.             "type": "string"
+1766.           }
+1767.         }
+1768.       }
+1769.     }
+1770.   }
+1771. } 
+1772.  
+
+
+ДОДАТОК Д
+Приклад програмного коду api/user.py
+ 
+1. from fastapi import APIRouter, Depends, HTTPException, status
+2. from sqlalchemy.ext.asyncio import AsyncSession
+3. from app.models.user import User
+4. from app.schemas.user import UserCreate, UserUpdate, UserInDB, UserLogin
+5. from app.database import get_db
+6. from app.utils.verification import verify_password, hash_password
+7. from typing import List
+8. import logging
+9. from sqlalchemy import select
+10. 
+11. router = APIRouter()
+12. 
+13. logging.basicConfig(level=logging.DEBUG)
+14. logger = logging.getLogger(__name__)
+15. 
+16. @router.post("/users/", response_model=UserInDB, status_code=status.HTTP_201_CREATED)
+17. async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+18.     try:
+19.         existing_user = await User.check_user_exists(db, user.email)
+20.         if existing_user:
+21.             logger.error(f"User with email {user.email} already exists.")
+22.             raise HTTPException(status_code=400, detail="User already exists")
+23. 
+24.         hashed_password = hash_password(user.password)
+25.         user_data = user.dict()
+26.         user_data["password"] = hashed_password
+27. 
+28.         new_user = await User.create(db, user_data)
+29.         logger.info(f"New user created with ID {new_user.user_id}")
+30.         return new_user
+31.     except Exception as e:
+32.         logger.exception(f"Error occurred: {str(e)}")
+33.         raise HTTPException(status_code=500, detail="Internal Server Error")
+34. 
+35. 
+36. @router.post("/users/login", response_model=UserInDB)
+37. async def login_user(user: UserLogin, db: AsyncSession = Depends(get_db)):  # Используем UserLogin
+38.     user_from_db = await User.check_user_exists(db, user.email)
+39.     if not user_from_db or not verify_password(user.password, user_from_db.password):
+40.         raise HTTPException(status_code=401, detail="Invalid credentials")
+41.     return user_from_db
+42. 
+43. 
+44. @router.get("/users/{user_id}", response_model=UserInDB)
+45. async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
+46.     stmt = select(User).where(User.user_id == user_id)
+47.     result = await db.execute(stmt)
+48.     user_from_db = result.scalars().first()
+49.     if not user_from_db:
+50.         raise HTTPException(status_code=404, detail="User not found")
+51.     return user_from_db
+52. 
+53. 
+54. @router.put("/users/{user_id}", response_model=UserInDB)
+55. async def update_user(user_id: int, user_update: UserUpdate, db: AsyncSession = Depends(get_db)):
+56.     stmt = select(User).where(User.user_id == user_id)
+57.     result = await db.execute(stmt)
+58.     user_from_db = result.scalars().first()
+59. 
+60.     if not user_from_db:
+61.         raise HTTPException(status_code=404, detail="User not found")
+62. 
+63.     user_data = user_update.dict(exclude_unset=True)
+64.     logger.debug(f"User data to update: {user_data}")
+65. 
+66.     for key, value in user_data.items():
+67.         setattr(user_from_db, key, value)
+68. 
+69.     try:
+70.         await db.commit()
+71.         await db.refresh(user_from_db)
+72.         logger.info(f"User with ID {user_id} updated successfully.")
+73.     except Exception as e:
+74.         logger.exception(f"Error occurred while updating user: {str(e)}")
+75.         raise HTTPException(status_code=500, detail="Internal Server Error")
+76. 
+77.     return user_from_db
+78. 
+79. 
+80. @router.get("/users/", response_model=List[UserInDB])
+81. async def get_all_users(db: AsyncSession = Depends(get_db)):
+82.     users = await User.get_all_users(db)
+83.     return users
+84. 
+85. 
+86. @router.delete("/users/{user_id}", response_model=UserInDB)
+87. async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
+88.     user_from_db = await User.delete_user(db, user_id)
+89.     if not user_from_db:
+90.         raise HTTPException(status_code=404, detail="User not found")
+91.     return user_from_db
+
+
+ДОДАТОК Е
+Посилання на відео
+
+Відео-посилання на Youtube
+https://youtu.be/yzkUapngcg0
+
