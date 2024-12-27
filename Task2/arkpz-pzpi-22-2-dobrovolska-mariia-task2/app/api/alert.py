@@ -77,4 +77,3 @@ async def delete_alert(alert_id: int, db: AsyncSession = Depends(get_db)):
     except Exception as e:
         logger.exception(f"Error occurred while deleting alert: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
-

@@ -1,10 +1,16 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLAlchemyEnum
+from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLAlchemyEnum, Boolean
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.database import Base
 from enum import Enum
 from sqlalchemy.orm import relationship
+from fastapi import HTTPException
+import logging
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 class UserRole(str, Enum):
     user = "user"
@@ -19,7 +25,50 @@ class User(Base):
     password = Column(String)
     role = Column(SQLAlchemyEnum(UserRole, native_enum=False), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    is_blocked = Column(Boolean, default=False)  # Новое поле для блокировки
+    blocked_until = Column(DateTime, nullable=True)  # Новое поле для времени окончания блокировки
     user_incubators = relationship("UserIncubator", back_populates="user")
+
+    @classmethod
+    async def block_user(cls, db_session: AsyncSession, user_id: int, block_minutes: int):
+        try:
+            stmt = select(cls).where(cls.user_id == user_id)
+            result = await db_session.execute(stmt)
+            user = result.scalars().first()
+
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            user.is_blocked = True
+            user.blocked_until = datetime.utcnow() + timedelta(minutes=block_minutes)
+
+            await db_session.commit()
+            return user
+        except Exception as e:
+            logger.error(f"Error while blocking user with ID {user_id}: {str(e)}")
+            await db_session.rollback()  # Ensure rollback in case of error
+            raise HTTPException(status_code=500, detail="Internal server error during blocking")
+
+    @classmethod
+    async def unblock_user(cls, db_session: AsyncSession, user_id: int):
+        try:
+            stmt = select(cls).where(cls.user_id == user_id)
+            result = await db_session.execute(stmt)
+            user = result.scalars().first()
+
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            user.is_blocked = False
+            user.blocked_until = None
+
+            await db_session.commit()
+            return user
+        except Exception as e:
+            logger.error(f"Error while unblocking user with ID {user_id}: {str(e)}")
+            await db_session.rollback()  # Ensure rollback in case of error
+            raise HTTPException(status_code=500, detail="Internal server error during unblocking")
+
 
     @classmethod
     async def check_user_exists(cls, db_session: AsyncSession, email: str):

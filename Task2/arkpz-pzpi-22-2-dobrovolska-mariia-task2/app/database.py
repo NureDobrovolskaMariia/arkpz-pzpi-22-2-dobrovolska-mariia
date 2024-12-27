@@ -18,9 +18,14 @@ expire_on_commit=False,
 Base = declarative_base()
 
 async def init_db():
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    try:
+        logger.info("Initializing the database.")
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database initialized successfully.")
+    except Exception as e:
+        logger.error(f"Error occurred while initializing the database: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error initializing database")
 
 
 logger = logging.getLogger(__name__)
@@ -28,8 +33,11 @@ logging.basicConfig(level=logging.DEBUG)
 
 async def get_db():
     try:
+        logger.info("Attempting to create a new database session.")
         async with AsyncSessionLocal() as db:
+            logger.info("Database session created successfully.")
             yield db
     except Exception as e:
         logger.error(f"Error occurred while getting the database session: {str(e)}")
         raise HTTPException(status_code=500, detail="Database connection error")
+

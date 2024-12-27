@@ -1,3 +1,4 @@
+#app/models/alert_history.py
 from sqlalchemy import Column, Integer, ForeignKey, String, DateTime
 from sqlalchemy.orm import relationship
 from app.database import Base

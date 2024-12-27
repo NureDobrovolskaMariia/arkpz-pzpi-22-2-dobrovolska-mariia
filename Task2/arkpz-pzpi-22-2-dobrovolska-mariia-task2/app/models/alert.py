@@ -1,3 +1,4 @@
+#app/models/alert.py
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base

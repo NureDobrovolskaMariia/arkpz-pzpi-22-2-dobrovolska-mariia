@@ -49,4 +49,3 @@ class UserInDB(UserBase):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
-
