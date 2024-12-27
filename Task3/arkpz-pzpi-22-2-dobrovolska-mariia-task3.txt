@@ -1,1 +1,217 @@
+Міністерство освіти і науки України
+
+
+
+Харківський національний університет радіоелектроніки
+
+Кафедра програмної інженерії
+
+
+
+
+Лабараторна робота №3
+
+з дисципліни “ Аналіз та рефакторінг коду”
+
+
+
+
+
+Виконала:                                                       Перевірив:
+Студентка ПЗПІ-22-2                                             ст. викладач кафедри ПІ           
+Добровольська М.А.                                              Сокорчук Ігор Петрович
+
+
+
+
+
+
+
+
+2024
+
+
+
+
+
+МЕТА РОБОТИ
+
+Метою роботи є розробити бізнес логіку та функції адміністрування
+серверної частини програмної системи.
+ХІД РОБОТИ
+В ході виконання лабораторної роботи було реалізовано наступну бізнес
+логіку (опис інженерних рішень):
+Хешування паролю за технологією SHA256 для його безпечнішого
+зберігання в базі даних;
+Система авторизації реалізована використовуючи jwt токени;
+Реалізація роботи з сесіями, зберігання поточного
+авторизованого користувача та обмеження доступу до функціональності
+платформи в залежності від ролі користувача;
+Функціонал адміністрування було розширено завдяки надання можливості блокування користувачів адміністраторами. Тобто якщо користувача заблокували, то він не зможе зайти у свій аккаунт, йому буде приходити повідомелння що його заблокували на певний час;
+Виконання діагностики сенсорів певного типу в певному інкубаторі
+базуючись на даних за певний час. Результат діагностики – середнє від
+відношень відхилення від середнього до цього середнього по всім сенсорам
+для кожного з наборів показників;
+Під час виконання лабораторної роботи також було сформовано UML
+діаграми діяльності системи для таких процесів, як блокування користувачів та ведення аналізу та діагностіки сенсорів (Додаток А). Окрім цього, було сформовано UML діаграму взаємодії (послідовності) для процесу створення нового користувача та його входу в систему (Додаток Б)
+
+ВИСНОВКИ
+У ході виконання роботи було досягнуто поставленої мети – реалізовано основну бізнес-логіку та функції адміністрування серверної частини програмної системи:
+	Забезпечено безпечне зберігання паролів шляхом використання технології хешування SHA256.
+	Реалізовано систему авторизації на основі JWT-токенів, що покращує безпеку та спрощує керування сесіями.
+	Додано функціонал для управління ролями користувачів, включаючи блокування облікових записів адміністраторами. Це підвищує контроль доступу до функціональності системи.
+	Впроваджено модуль діагностики сенсорів, який аналізує дані за заданий період і забезпечує точні результати для оцінки стану обладнання.
+Крім того, створені UML-діаграми, які відображають ключові процеси роботи системи, такі як блокування користувачів, діагностика сенсорів та взаємодія з платформою під час створення нового користувача. Ці діаграми допомагають краще зрозуміти реалізовану бізнес-логіку.
+Робота сприяє підвищенню функціональності, безпеки та зручності використання системи, що є важливим кроком у її розвитку.
+
+
+ДОДАТОК Б
+UML ДІАГРАМА ВЗАЄМОДІЇ (ПОСЛІДОВНОСТІ)
+
+ 
+Рисунок Б.1 – Створення нового користувача та його вхід в систему
+ДОДАТОК В
+Приклад програмного коду api/user.py
+ 
+1 from fastapi import APIRouter, Depends, HTTPException, status
+2 from sqlalchemy.exc import SQLAlchemyError
+3 from sqlalchemy.ext.asyncio import AsyncSession
+4 from starlette.responses import JSONResponse
+5 from app.models.user import User
+6 from app.schemas.user import UserCreate, UserUpdate, UserInDB, UserLogin
+7 from app.database import get_db
+8 from app.utils.verification import verify_password, hash_password
+9 from typing import List
+10 import logging
+11 from sqlalchemy import select
+12 from app.dependencies import is_admin, is_user
+13 from app.utils.auth import create_access_token
+14 from app.dependencies import get_current_user
+15 from datetime import datetime
+16 
+17 
+18 user_router = APIRouter() 
+19 
+20 
+21 logging.basicConfig(level=logging.DEBUG)
+22 logger = logging.getLogger(__name__)
+23 
+24 @user_router.post("/users/", response_model=UserInDB, status_code=status.HTTP_201_CREATED) 
+25 async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+26     try:
+27         existing_user = await User.check_user_exists(db, user.email)
+28         if existing_user:
+29             logger.error(f"User with email {user.email} already exists.")
+30             raise HTTPException(status_code=400, detail="User already exists")
+31 
+32         hashed_password = hash_password(user.password)
+33         user_data = user.dict()
+34         user_data["password"] = hashed_password
+35 
+36         new_user = await User.create(db, user_data)
+37         logger.info(f"New user created with ID {new_user.user_id}")
+38         return new_user
+39     except Exception as e:
+40         logger.exception(f"Error occurred: {str(e)}")
+41         raise HTTPException(status_code=500, detail="Internal Server Error")
+42 
+43 
+44 @user_router.post("/users/login", response_model=str)  
+45 async def login_user(user: UserLogin, db: AsyncSession = Depends(get_db)):
+46     user_from_db = await User.check_user_exists(db, user.email)
+47     if not user_from_db or not verify_password(user.password, user_from_db.password):
+48         raise HTTPException(status_code=401, detail="Invalid credentials")
+49 
+50     if user_from_db.is_blocked:
+51         if user_from_db.blocked_until and user_from_db.blocked_until > datetime.utcnow():
+52             raise HTTPException(status_code=403, detail="You are temporarily blocked")
+53         else:
+54             user_from_db.is_blocked = False
+55             user_from_db.blocked_until = None
+56             await db.commit()
+57 
+58     token = create_access_token({"sub": user_from_db.email, "role": user_from_db.role.value})
+59     return token
+60 
+61 
+62 @user_router.get("/users/{user_id}", response_model=UserInDB, dependencies=[Depends(get_current_user)]) 
+63 async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
+64     user = await User.get_by_id(db, user_id)
+65     if not user:
+66         raise HTTPException(status_code=404, detail="User not found")
+67     return user
+68 
+69 
+70 @user_router.put("/users/{user_id}", response_model=UserInDB, dependencies=[Depends(get_current_user)])  
+71 async def update_user(user_id: int, user_update: UserUpdate, db: AsyncSession = Depends(get_db)):
+72     user = await User.get_by_id(db, user_id)
+73     if not user:
+74         raise HTTPException(status_code=404, detail="User not found")
+75 
+76     update_data = user_update.dict(exclude_unset=True)
+77     if "password" in update_data:
+78         update_data["password"] = hash_password(update_data["password"])
+79 
+80     updated_user = await User.update(db, user_id, update_data)
+81     return updated_user
+82 
+83 
+84 @user_router.get("/users/", response_model=List[UserInDB], dependencies=[Depends(is_admin)])
+85 async def get_all_users(db: AsyncSession = Depends(get_db)):
+86     users = await User.get_all_users(db)
+87     return users
+88 
+89 
+90 @user_router.delete("/users/{user_id}", response_model=UserInDB, dependencies=[Depends(is_admin)])  
+91 async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
+92     user = await User.delete_user(db, user_id)
+93     if not user:
+94         raise HTTPException(status_code=404, detail="User not found")
+95     return user
+96 
+97 
+98 @user_router.post("/users/{user_id}/block")
+99 async def block_user(user_id: int, block_minutes: int, db: AsyncSession = Depends(get_db)):
+100     try:
+101         print(f"Blocking user with ID {user_id} for {block_minutes} minutes")
+102 
+103         user = await User.block_user(db, user_id, block_minutes)
+104         if not user:
+105             raise HTTPException(status_code=404, detail="User not found")
+106         return {"message": f"User {user.email} is blocked for {block_minutes} minutes"}
+107     except Exception as e:
+108         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+109 
+110 
+111 @user_router.post("/users/{user_id}/unblock")
+112 async def unblock_user(user_id: int, db: AsyncSession = Depends(get_db)):
+113     try:
+114 
+115         print(f"Unblocking user with ID {user_id}")
+116 
+117         user = await User.unblock_user(db, user_id)
+118         if not user:
+119             raise HTTPException(status_code=404, detail="User not found")
+120         return {"message": f"User {user.email} is unblocked"}
+121     except Exception as e:
+122         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+123 
+124 
+125 @user_router.post("/users/logout", status_code=status.HTTP_200_OK)
+126 async def logout(response: JSONResponse):
+127 
+128     try: 
+129         response.delete_cookie(key="access_token")  
+130     
+131         return {"message": "Successfully logged out"}
+132 
+133     except Exception as e:
+134         raise HTTPException(status_code=500, detail=f"Error occurred while logging out: {str(e)}") 
+135 
+
+ДОДАТОК Г
+Посилання на відео
+
+Відео-посилання на Youtube
+https://youtu.be/w8jIcnia-w8
 
