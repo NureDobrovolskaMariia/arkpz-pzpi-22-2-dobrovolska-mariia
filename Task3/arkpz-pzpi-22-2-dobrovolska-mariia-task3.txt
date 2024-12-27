@@ -25,9 +25,6 @@
 
 
 
-
-
-
 2024
 
 
@@ -57,12 +54,20 @@
 
 ВИСНОВКИ
 У ході виконання роботи було досягнуто поставленої мети – реалізовано основну бізнес-логіку та функції адміністрування серверної частини програмної системи:
-	Забезпечено безпечне зберігання паролів шляхом використання технології хешування SHA256.
-	Реалізовано систему авторизації на основі JWT-токенів, що покращує безпеку та спрощує керування сесіями.
-	Додано функціонал для управління ролями користувачів, включаючи блокування облікових записів адміністраторами. Це підвищує контроль доступу до функціональності системи.
-	Впроваджено модуль діагностики сенсорів, який аналізує дані за заданий період і забезпечує точні результати для оцінки стану обладнання.
+-	Забезпечено безпечне зберігання паролів шляхом використання технології хешування SHA256.
+-	Реалізовано систему авторизації на основі JWT-токенів, що покращує безпеку та спрощує керування сесіями.
+-	Додано функціонал для управління ролями користувачів, включаючи блокування облікових записів адміністраторами. Це підвищує контроль доступу до функціональності системи.
+-	Впроваджено модуль діагностики сенсорів, який аналізує дані за заданий період і забезпечує точні результати для оцінки стану обладнання.
 Крім того, створені UML-діаграми, які відображають ключові процеси роботи системи, такі як блокування користувачів, діагностика сенсорів та взаємодія з платформою під час створення нового користувача. Ці діаграми допомагають краще зрозуміти реалізовану бізнес-логіку.
 Робота сприяє підвищенню функціональності, безпеки та зручності використання системи, що є важливим кроком у її розвитку.
+
+ДОДАТОК А
+UML діаграми діяльності
+ 
+Рисунок А.1 – Блокування користувачів
+
+ 
+Рисунок А.2 – Аналіз роботи сенсорів інкубатора
 
 
 ДОДАТОК Б
@@ -70,7 +75,53 @@ UML ДІАГРАМА ВЗАЄМОДІЇ (ПОСЛІДОВНОСТІ)
 
  
 Рисунок Б.1 – Створення нового користувача та його вхід в систему
+
 ДОДАТОК В
+
+Частина коду в якої математичний розрахункок аналізу серсорів інкубатора
+1 @router.get("/sensor_readings/device/{device_id}", response_model=List[SensorReadingInDB])
+2 async def get_sensor_readings_by_device_id(device_id: int, db: AsyncSession = Depends(get_db)):
+3     try:
+4         sensor_readings = await SensorReading.get_by_device_id(db, device_id)
+5         if not sensor_readings:
+6             raise HTTPException(status_code=404, detail="No sensor readings found for the given device ID")
+7         return sensor_readings
+8     except Exception as e:
+9         logger.exception(f"Error occurred while retrieving sensor readings by device ID {device_id}: {str(e)}")
+10         raise HTTPException(status_code=500, detail="Internal Server Error")
+11 
+12 
+13 @router.get("/sensor_reading/diagnostics/{device_id}", response_model=List[dict])
+14 async def get_sensor_reading_diagnostics(device_id: int, db: AsyncSession = Depends(get_db)):
+15     try:
+16         sensor_readings = await SensorReading.get_last_four_by_device_id(db, device_id)
+17 
+18         if len(sensor_readings) < 4:
+19             raise HTTPException(status_code=404, detail="There is not enough data for diagnostics")
+20         values = [reading.value for reading in sensor_readings]
+21 
+22         mean_value = sum(values) / len(values)
+23 
+24         diagnostics = []
+25         for reading in sensor_readings:
+26 
+27             error = abs(reading.value - mean_value)
+28 
+29             error_ratio = error / mean_value if mean_value != 0 else 0
+30             diagnostics.append({
+31                 "reading_id": reading.reading_id,
+32                 "value": reading.value,
+33                 "error": error,
+34                 "error_ratio": error_ratio
+35             })
+36 
+37         return diagnostics
+38 
+39     except Exception as e:
+40         logger.exception(f"Error occurred while retrieving sensor readings by device ID {device_id}: {str(e)}")
+41         raise HTTPException(status_code=500, detail="Internal Server Error"
+
+
 Приклад програмного коду api/user.py
  
 1 from fastapi import APIRouter, Depends, HTTPException, status
